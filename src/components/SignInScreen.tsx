@@ -2,7 +2,7 @@
 
 import { signIn } from "next-auth/react";
 
-export function SignInScreen() {
+export function SignInScreen({ mode }: { mode: "github" | "guest" }) {
   return (
     <div className="flex flex-1 items-center justify-center px-6">
       <div className="w-full max-w-sm text-center">
@@ -13,13 +13,29 @@ export function SignInScreen() {
             are grounded in the knowledge base and cite their sources.
           </p>
         </div>
-        <button
-          onClick={() => signIn("github")}
-          className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-neutral-900 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-neutral-700 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-200"
-        >
-          <GitHubIcon />
-          Continue with GitHub
-        </button>
+        {mode === "github" ? (
+          <button
+            onClick={() => signIn("github")}
+            className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-neutral-900 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-neutral-700 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-200"
+          >
+            <GitHubIcon />
+            Continue with GitHub
+          </button>
+        ) : (
+          <>
+            <button
+              onClick={() => signIn("guest")}
+              className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-neutral-900 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-neutral-700 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-200"
+            >
+              Continue as Guest
+            </button>
+            <p className="mt-3 text-xs text-neutral-400 dark:text-neutral-500">
+              No GitHub OAuth app configured, so sign-in falls back to a local
+              guest session. Set GITHUB_ID and GITHUB_SECRET to enable real
+              GitHub sign-in.
+            </p>
+          </>
+        )}
       </div>
     </div>
   );

@@ -26,6 +26,8 @@ at runtime.
 - Suggested-questions row for a fast first interaction
 - Light/dark aware UI built with Tailwind CSS
 - Fully offline test suite - no network calls, no API key required
+- Zero-config local run: falls back to guest sign-in and a demo response
+  when no GitHub OAuth app or Anthropic key is configured
 
 ## How it works
 
@@ -82,13 +84,20 @@ flowchart LR
 
 ```bash
 npm install
-cp .env.example .env.local
-# fill in ANTHROPIC_API_KEY, NEXTAUTH_SECRET, GITHUB_ID, GITHUB_SECRET
 npm run dev
 ```
 
-Open `http://localhost:3000`. You'll need a GitHub OAuth app (callback URL
-`http://localhost:3000/api/auth/callback/github`) and an Anthropic API key.
+Open `http://localhost:3000`. With no environment variables set at all, the
+app runs end to end: sign-in falls back to a local guest session, and chat
+answers fall back to a canned response built from the retrieved knowledge
+base sections instead of a real model call. This is the fastest way to see
+the retrieval, streaming, and citation flow working.
+
+To use real GitHub sign-in and real model-generated answers, copy
+`.env.example` to `.env.local` and fill in `ANTHROPIC_API_KEY` and a GitHub
+OAuth app's `GITHUB_ID` / `GITHUB_SECRET` (callback URL
+`http://localhost:3000/api/auth/callback/github`). Each falls back
+independently, so you can set just one and get the other's fallback.
 
 ### Tests
 

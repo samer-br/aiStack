@@ -31,16 +31,48 @@ function lastUserMessage(messages: ChatMessage[]): string {
   return "";
 }
 
+/**
+ * Canned, retrieval-grounded response used when no ANTHROPIC_API_KEY is
+ * configured, so the full retrieval + streaming + citations flow can be
+ * exercised locally without an API key.
+ */
+async function* mockAssistantReply(
+  citations: Citation[],
+  query: string,
+): AsyncGenerator<string> {
+  const body =
+    citations.length > 0
+      ? `Based on the Nimbus docs, here's what's relevant to "${query}":\n\n` +
+        citations.map((c, i) => `[${i + 1}] ${c.heading} (${c.title}): ${c.text}`).join("\n\n")
+      : `I couldn't find anything in the Nimbus docs about "${query}".`;
+
+  const notice =
+    "\n\n[Local demo mode: no ANTHROPIC_API_KEY is set, so this is a canned " +
+    "response assembled from retrieval results rather than a model-generated answer.]";
+
+  for (const word of `${body}${notice}`.split(" ")) {
+    yield `${word} `;
+  }
+}
+
+function defaultStreamReply(
+  citations: Citation[],
+  query: string,
+): typeof streamAssistantReply {
+  if (process.env.ANTHROPIC_API_KEY) return streamAssistantReply;
+  return () => mockAssistantReply(citations, query);
+}
+
 export async function* runChat(
   messages: ChatMessage[],
   deps: Partial<ChatEngineDeps> = {},
 ): AsyncGenerator<ChatEvent> {
   const retrieveFn = deps.retrieveFn ?? retrieve;
-  const streamReply = deps.streamReply ?? streamAssistantReply;
 
   const query = lastUserMessage(messages);
   const citations = retrieveFn(query);
   const system = buildSystemPrompt(buildContextBlock(citations));
+  const streamReply = deps.streamReply ?? defaultStreamReply(citations, query);
 
   yield { type: "citations", citations };
 
